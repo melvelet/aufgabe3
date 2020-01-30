@@ -50,9 +50,6 @@ void DBMyQueryManager::selectJoinTupleNested(DBTable *table[2],
   DBListTuple l[2];
   for (uint i = 0; i < 2; ++i) {
     selectTuple(table[i], where[i], l[i]);
-    // cout << "------------------ table " << i;
-    // cout << table[i]->getRelDef().toString();
-    // cout << attrJoinPos[i];
   }
   DBListTuple::iterator i = l[0].begin();
   while (i != l[0].end()) {
@@ -115,7 +112,7 @@ void DBMyQueryManager::selectJoinTuple(DBTable *table[2],
       } 
     } else {
         outer = 1;
-    } // else outer = 0
+    }
   } else if (adef1.isIndexed()) {
     indexed = true;
   } else {
@@ -124,13 +121,9 @@ void DBMyQueryManager::selectJoinTuple(DBTable *table[2],
     }
   }
 
-  // cout << "indexed: " << indexed << "    outer: " << outer << "    smaller: " << smaller << "\n";
-
   if (!indexed) {
     selectJoinTupleNested(table, attrJoinPos, where, tuples);
-    // cout << "not indexed\n";
   } else {
-    // cout << "Indexed\n";
     selectJoinTupleIndexedNested(table, attrJoinPos, where, tuples, outer);
   }
 
@@ -150,17 +143,14 @@ void DBMyQueryManager::selectJoinTupleIndexedNested(DBTable *table[2],
   DBListTuple innerlist;
 
   selectTuple(table[outer], where[outer], outerlist);
-  // cout << "size: " << outerlist.size() << "\n";
   
 
   DBListTuple::iterator i = outerlist.begin();
   while (i != outerlist.end()) {
     DBTuple &left = (*i);
 
-    // const DBAttrType attrValue = left.getAttrVal(attrJoinPos[outer]);
     selectIndexedTuple(table[inner], where[inner], innerlist,
                        attrJoinPos[inner], left.getAttrVal(attrJoinPos[outer]));
-    // cout << "size: " << innerlist.size() << "\n";
 
     DBListTuple::iterator u = innerlist.begin();
     while (u != innerlist.end()) {
@@ -304,7 +294,6 @@ void DBMyQueryManager::selectIndexedTuple(DBTable *table,
   QualifiedName qname;
   strcpy(qname.relationName, def.relationName().c_str());
 
-  // cout << def.toString();
   DBIndex *index = NULL;
   DBAttrDef adef = def.attrDef(attrIndex);
   strcpy(qname.attributeName, adef.attrName().c_str());
