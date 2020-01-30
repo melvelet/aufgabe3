@@ -128,8 +128,10 @@ void DBMyQueryManager::selectJoinTuple(DBTable *table[2],
 
   if (!indexed) {
     selectJoinTupleNested(table, attrJoinPos, where, tuples);
+    // cout << "not indexed\n";
   } else {
-    selectJoinTupleIndexedNested(table, attrJoinPos, where, tuples, indexed, outer);
+    // cout << "Indexed\n";
+    selectJoinTupleIndexedNested(table, attrJoinPos, where, tuples, outer);
   }
 
   
@@ -140,14 +142,12 @@ void DBMyQueryManager::selectJoinTupleIndexedNested(DBTable *table[2],
                                        uint attrJoinPos[2],
                                        DBListPredicate where[2],
                                        DBListJoinTuple &tuples,
-                                       bool indexed,
                                        uint outer) {
 
   uint inner = 1 - outer;
 
   DBListTuple outerlist;
   DBListTuple innerlist;
-  // DBListTuple templist;
 
   selectTuple(table[outer], where[outer], outerlist);
   // cout << "size: " << outerlist.size() << "\n";
@@ -165,15 +165,12 @@ void DBMyQueryManager::selectJoinTupleIndexedNested(DBTable *table[2],
     DBListTuple::iterator u = innerlist.begin();
     while (u != innerlist.end()) {
       DBTuple &right = (*u);
-
-      if (left.getAttrVal(attrJoinPos[outer]) == right.getAttrVal(attrJoinPos[inner])) {
-        LOG4CXX_DEBUG(logger, "left:\n" + left.toString("\t"));
-        LOG4CXX_DEBUG(logger, "right:\n" + right.toString("\t"));
-        pair<DBTuple, DBTuple> p;
-        p.first = left;
-        p.second = right;
-        tuples.push_back(p);
-      }
+      LOG4CXX_DEBUG(logger, "left:\n" + left.toString("\t"));
+      LOG4CXX_DEBUG(logger, "right:\n" + right.toString("\t"));
+      pair<DBTuple, DBTuple> p;
+      p.first = left;
+      p.second = right;
+      tuples.push_back(p);
       ++u;
     }
     ++i;
@@ -295,6 +292,7 @@ void DBMyQueryManager::selectIndexedTuple(DBTable *table,
   LOG4CXX_DEBUG(logger, "table:\n" + table->toString("\t"));
   LOG4CXX_DEBUG(logger, "where: " + TO_STR(where));
 
+  tuple.clear();
   DBListTuple l;
   TID t;
   t.page = 0;
@@ -304,7 +302,6 @@ void DBMyQueryManager::selectIndexedTuple(DBTable *table,
   DBListTID tidList;
   const DBRelDef &def = table->getRelDef();
   QualifiedName qname;
-  bool indexUsed = false;
   strcpy(qname.relationName, def.relationName().c_str());
 
   // cout << def.toString();
@@ -321,7 +318,6 @@ void DBMyQueryManager::selectIndexedTuple(DBTable *table,
       delete index;
     throw e;
   }
-  indexUsed = true;
 
   DBListPredicate::iterator u = where.begin();
   while (u != where.end()) {
@@ -336,27 +332,22 @@ void DBMyQueryManager::selectIndexedTuple(DBTable *table,
       DBIndex *index = NULL;
       try {
         index = sysCatMgr.openIndex(connectDB, qname, READ);
-        if (indexUsed == true) {
-          index->find(p.val(), tidListTmp);
-          tidListTmp.sort();
-        } else {
-          index->find(p.val(), tidList);
-          tidList.sort();
-        }
+
+        index->find(p.val(), tidListTmp);
+        tidListTmp.sort();
+
         delete index;
       } catch (DBException e) {
         if (index != NULL)
           delete index;
         throw e;
       }
-      if (indexUsed == true) {
-        DBListTID tidListNew;
-        set_intersection(tidList.begin(), tidList.end(), tidListTmp.begin(), tidListTmp.end(),
-                         std::inserter(tidListNew, tidListNew.begin()));
-        tidList = tidListNew;
-      } else {
-        indexUsed = true;
-      }
+
+      DBListTID tidListNew;
+      set_intersection(tidList.begin(), tidList.end(), tidListTmp.begin(), tidListTmp.end(),
+                        std::inserter(tidListNew, tidListNew.begin()));
+      tidList = tidListNew;
+
       LOG4CXX_DEBUG(logger, "tidList: " + TO_STR(tidList));
       if (tidList.size() == 0)
         break;
@@ -369,11 +360,9 @@ void DBMyQueryManager::selectIndexedTuple(DBTable *table,
 
   do {
     l.clear();
-    if (indexUsed == true) {
-      table->readTIDs(tidList, l);
-    } else {
-      t = table->readSeqFromTID(t, 100, l);
-    }
+
+    table->readTIDs(tidList, l);
+
     LOG4CXX_DEBUG(logger, "read " + TO_STR(l.size()) + " tuples");
     DBListTuple::iterator i = l.begin();
     while (l.end() != i) {
@@ -396,7 +385,7 @@ void DBMyQueryManager::selectIndexedTuple(DBTable *table,
       }
       ++i;
     }
-  } while (l.size() == 100 && indexUsed == false);
+  } while (l.size() == 100);
   LOG4CXX_DEBUG(logger, "return");
 }
 

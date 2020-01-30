@@ -15,7 +15,7 @@ namespace HubDB {
             void selectIndexedTuple(DBTable * table,DBListPredicate & where,DBListTuple & tuple, uint attrIndex, const DBAttrType &attrValue);
             void selectJoinTuple(DBTable * table[2],uint attrJoinPos[2],DBListPredicate where[2],DBListJoinTuple & tuples);
             void selectJoinTupleNested(DBTable * table[2],uint attrJoinPos[2],DBListPredicate where[2],DBListJoinTuple & tuples);
-            void selectJoinTupleIndexedNested(DBTable * table[2],uint attrJoinPos[2],DBListPredicate where[2],DBListJoinTuple & tuples, bool indexed, uint outer);
+            void selectJoinTupleIndexedNested(DBTable * table[2],uint attrJoinPos[2],DBListPredicate where[2],DBListJoinTuple & tuples, uint outer);
 
             static int registerClass();
 
