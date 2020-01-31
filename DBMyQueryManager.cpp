@@ -16,9 +16,6 @@ DBMyQueryManager::DBMyQueryManager(DBServerSocket &socket, DBSysCatMgr &sysCatMg
   if (logger != NULL) {
     LOG4CXX_INFO(logger, "DBMyQueryMgr()");
   }
-
-  // TODO Code hier einfügen
-
 }
 
 /**
@@ -26,21 +23,15 @@ DBMyQueryManager::DBMyQueryManager(DBServerSocket &socket, DBSysCatMgr &sysCatMg
  */
 DBMyQueryManager::~DBMyQueryManager() {
   LOG4CXX_INFO(logger, "~DBMyQueryManager()");
-
-  // TODO Code hier einfügen
 }
 
 string DBMyQueryManager::toString(string linePrefix) const {
   stringstream ss;
   ss << linePrefix << "[DBMyQueryManager]" << endl;
-
-  // TODO Code hier einfügen
-
   ss << linePrefix << "----------------" << endl;
   return ss.str();
 }
 
-//R: duplicate of old method
 void DBMyQueryManager::selectJoinTupleNested(DBTable *table[2],
                                        uint attrJoinPos[2],
                                        DBListPredicate where[2],
